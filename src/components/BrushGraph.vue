@@ -6,7 +6,9 @@
             class="brushBar"
             v-for="(result, id) in parliament"
             :key="id">
-            <article class="brushBar_bar">
+            <article class="brushBar_bar"
+                :id="`brushBar_bar_${id}`"
+                @mousedown="registerMove(parliament, id, $event)">
                 <div class="caption"
                     :style="`
                         bottom: calc(${result.percentage}% * ${100 / max})
@@ -20,20 +22,6 @@
                     </span>
                     {{result.percentage}}%
                 </div>
-                <input type="range"
-                    v-model="result.percentage"
-                    :name="`brushBar_${id}`"
-                    :id="`brushBar_${id}`"
-                    :disabled="locked[id]"
-                    @input="updateResult(id, $event.target.value, parliament)"
-                    min=0
-                    :max="max"
-                    step="0.1"
-                />
-                <!--
-                    We don't have much control over the range slider,
-                    so this div will be the actual visible bar of the chart.
-                -->
                 <div class="brushBar_chartBar"
                     :style="`
                         background-color: ${partyByID(id).color};
@@ -76,8 +64,67 @@ export default class BrushGraph extends Vue {
 
     /**
      * The range of the graph, in percent
+     * @TODO: Make the graph scale automatically if a bar crosses the max-range
      */
     private max: number = 40;
+
+    private totalPct = () => {
+        let total = 0;
+        Object.values(this.$store.state.parliament as Result).forEach((result) => {
+            total += result.percentage;
+        });
+        return Math.round(total * 10) / 10;
+    }
+    private totalSeats = () => {
+        let total = 0;
+        Object.values(this.$store.state.parliament as Result).forEach((result) => {
+            total += result.seats;
+        });
+        return total;
+    }
+
+    private registerMove(results: Results, id: string, e: MouseEvent) {
+        // Don't go selecting stuff
+        e.preventDefault();
+
+        if (this.locked[id]) { return; }
+
+        // How far up was the mouse when we started?
+        let y: number = e.y;
+
+        // How tall is the container (which maps to the `max` percentage)
+        const target = document.getElementById(`brushBar_bar_${id}`) as Element;
+        const height = target.clientHeight;
+
+        // This gets called everytime the mouse moves
+        const move = (moveEvent: MouseEvent) => {
+            const newY: number = moveEvent.y;
+            if (newY === y) { return; } // Nothing to see here
+
+            const delta = y - newY; // in px
+            const pctValue = this.max / height; // 1px = N %
+            const newValue = results[id].percentage + (delta * pctValue); // delta in %
+
+            // if (results[id].percentage < 0) { return; }
+
+            const rebalancedResults = this.balanceResults(id, newValue);
+
+            if (rebalancedResults !== null) {
+                y = newY;
+                results = rebalancedResults;
+                this.$store.commit('updateNationalPct', rebalancedResults);
+            } else {
+                y = newY;
+            }
+        };
+
+        document.addEventListener('mousemove', move);
+
+        addEventListener('mouseup', () => {
+            document.removeEventListener('mousemove', move);
+        });
+
+    }
 
     /**
      * Make the sum of our results balance out to 100%, and spread the
@@ -86,15 +133,18 @@ export default class BrushGraph extends Vue {
      * @param percentage The percentage the `id` party should have afterwards
      * @returns Balanced results as Results.
      */
-    private balanceResults(results: Results, id: string, percentage: number): Results {
-        const parties = Object.keys(results);
-        const balanced = results;
-        const result = (ptyID: string): number => {
-            return +results[ptyID].percentage;
-        };
+    private balanceResults(id: string, percentage: number): Results | null {
+        // No parties should be allowed to get negative percentages
+        percentage = percentage < 0 ? 0 : percentage;
 
-        // Un-fuck the percentage that gets stringified
-        results[id].percentage = result(id);
+        const results: Results = this.$store.state.parliament;
+        const clonedResults: Results = JSON.parse(JSON.stringify(results));
+        const parties = Object.keys(clonedResults);
+
+        const result = (ptyID: string): number => {
+            return +clonedResults[ptyID].percentage;
+        };
+        clonedResults[id].percentage = Math.round(percentage * 10 ) / 10;
 
         // How many percentages do we have on the graph?
         let distribution = 0;
@@ -117,37 +167,31 @@ export default class BrushGraph extends Vue {
             return unlocked && otherParty && canMove;
         });
 
+        if (moveableParties.length === 0) {
+            return null;
+        }
+
         // @FIXME: When a party hits 0 or 100 when dividing, we don't yet do
         // another pass, and divide the overflow - and we end up with a
         // non-100% result.
-        //
-        // Also, there's nothing stopping us from going above 100% if there's
-        // only two parties that can move, and one hits zero.
         const divided = distribution / moveableParties.length;
         moveableParties.forEach((party) => {
             const balancedResult = result(party) + divided;
             if (balancedResult > 100) {
                 const overflow = balancedResult - 100;
                 distribution += overflow;
-                balanced[party].percentage = 100;
+                clonedResults[party].percentage = 100;
             } else if (balancedResult < 0) {
                 const overflow = Math.abs(balancedResult);
                 distribution -= overflow;
-                balanced[party].percentage = 0;
+                clonedResults[party].percentage = 0;
             } else {
                 distribution -= divided;
-                balanced[party].percentage = Math.round(balancedResult * 10 ) / 10;
+                clonedResults[party].percentage = Math.round(balancedResult * 10 ) / 10;
             }
         });
 
-        return balanced;
-    }
-
-
-    private updateResult(id: string, percentage: number, res: Results): void {
-        const state = this.$store.state;
-        const results: Results = this.balanceResults(res, id, percentage);
-        this.$store.commit('updateNationalPct', results);
+        return clonedResults;
     }
 }
 </script>
@@ -232,34 +276,5 @@ export default class BrushGraph extends Vue {
         left: 0
         right: 0
         width: $width
-
-    input[type=range]
-        width: $height
-        height: $width
-        transform: rotate(-90deg)
-        transform-origin: ($height/2) ($height/2)
-        -webkit-appearance: none
-        margin: 0
-
-        &::-webkit-slider-runnable-track
-            background: $background
-            cursor: pointer
-
-        &::-moz-range-track
-            background: red
-
-        &::-ms-fill-lower
-            background: red
-
-        &:focus
-            outline: none
-
-        &::-webkit-slider-thumb
-            -webkit-appearance: none
-            background: none
-            height: $width
-            width: .75rem
-
-    .locked
 
 </style>
