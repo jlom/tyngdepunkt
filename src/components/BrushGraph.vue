@@ -220,6 +220,7 @@ export default class BrushGraph extends Vue {
         width: $width
         position: relative
         margin: 0 0 .5rem
+        cursor: pointer
 
         &::after
             content:

@@ -1,6 +1,6 @@
 <template>
     <header>
-        <img alt="" src="/stortinget.svg">
+        <img alt="Stortinget" src="/stortinget.svg">
         <h1>Rette tyngdepunkt</h1>
     </header>
 </template>

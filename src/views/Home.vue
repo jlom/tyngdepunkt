@@ -12,6 +12,11 @@
         <article class="mainrail">
             <h2>Oppslutning</h2>
             <BrushGraph />
+
+            <h2 class="headHead">Overskrifter</h2>
+            <Headlines />
+        </article>
+        <article class="headlines">
         </article>
     </main>
 </template>
@@ -23,6 +28,7 @@ import SeatTable from '@/components/SeatTable.vue';
 import BrushGraph from '@/components/BrushGraph.vue';
 import Coalitions from '@/components/Coalitions.vue';
 import MainHeader from '@/components/MainHeader.vue';
+import Headlines from '@/components/Headlines.vue';
 
 @Component({
     components: {
@@ -31,6 +37,7 @@ import MainHeader from '@/components/MainHeader.vue';
         BrushGraph,
         Coalitions,
         MainHeader,
+        Headlines,
     },
 })
 export default class Home extends Vue {}
@@ -41,6 +48,7 @@ export default class Home extends Vue {}
 
     main
         margin-top: 2rem
+        width: 95rem
 
     .siderail
         margin: 0 0 0 5rem
@@ -60,4 +68,7 @@ export default class Home extends Vue {}
         padding: 0 0 .5rem
         transform: rotate(-90deg) translateY(-17rem)
         transform-origin: bottom right
+
+        &.headHead
+            transform: rotate(-90deg) translateY(-17rem) translateX(-1rem)
 </style>

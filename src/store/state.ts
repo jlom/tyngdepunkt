@@ -616,7 +616,7 @@ const parliament: Results = {
     },
     other: {
         seats: 0,
-        percentage: 0.1,
+        percentage: 1.9,
     },
 };
 
@@ -660,7 +660,7 @@ const compare: Results = {
     },
     other: {
         seats: 0,
-        percentage: 0.1,
+        percentage: 1.9,
     },
 };
 

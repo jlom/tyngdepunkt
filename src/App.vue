@@ -7,10 +7,11 @@ $background: #F7F9FA
 
 *
     box-sizing: border-box
-    font-size: 12px
+    font-size: 13px
 
 body
     margin: 0
+    margin-left: calc(50vw - 47.5rem)
     padding: 0
     background-color: $background
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,

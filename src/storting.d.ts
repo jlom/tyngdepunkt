@@ -62,3 +62,9 @@ declare interface Coalition {
     name: string;
     parties: string[];
 }
+
+declare interface Story {
+    headline: string;
+    body: string;
+    newsValue: number;
+}
