@@ -580,10 +580,12 @@ const parliament: Results = {
     sp: {
         seats: 19,
         percentage: 10.3,
+        levelingSeats: 1,
     },
     sv: {
         seats: 11,
         percentage: 6.0,
+        levelingSeats: 6,
     },
     mdg: {
         seats: 1,
@@ -596,14 +598,17 @@ const parliament: Results = {
     krf: {
         seats: 8,
         percentage: 4.2,
+        levelingSeats: 5,
     },
     v: {
         seats: 8,
         percentage: 4.4,
+        levelingSeats: 4,
     },
     h: {
         seats: 45,
         percentage: 25,
+        levelingSeats: 3,
     },
     frp: {
         seats: 27,
