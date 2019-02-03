@@ -37,8 +37,13 @@
             <br>
 
             <input type="checkbox"
-                class="locked"
+                class="locked_checkbox"
+                :id="id"
                 v-model="locked[id]" />
+            <label class="locked_label"
+                :for="id">
+                Lås {{partyByID(id).legend}}
+            </label>
 
         </article>
     </article>
@@ -277,5 +282,39 @@ export default class BrushGraph extends Vue {
         left: 0
         right: 0
         width: $width
+
+        &::before
+            content: ''
+            display: block
+            position: relative
+            height: 2px
+            width: 2rem
+            top: 7px
+            left: 1rem
+            border-style: solid none
+            border-width: 1px 0
+            border-color: transparentize($background, .75)
+
+    .locked_label
+        display: inline-block
+        overflow: hidden
+        text-indent: -99rem
+        background-size: .8rem
+        background-repeat: no-repeat
+        background-position: center center
+        background-image: url('/unlocked.svg')
+        opacity: .3
+        height: 1.5rem
+        width: 4rem
+
+        &:hover
+            opacity: .5
+
+        input:checked + &
+            background-image: url('/locked.svg')
+            opacity: 1
+
+    .locked_checkbox
+        display: none
 
 </style>
